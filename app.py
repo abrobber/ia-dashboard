@@ -10,10 +10,11 @@ st.set_page_config(layout="wide", page_title="📊 Bitácora Twelve Data")
 st.title("📈 Bitácora Visual: Momentum + Volumen")
 
 # --- API Key ---
-API_KEY = st.secrets["api"]["twelve_data_key"]
+#API_KEY = st.secrets["api"]["twelve_data_key"]
+API_KEY = "7a8323602dee4ac382196181cc32a8a7"
 
 # --- Selección de símbolo e intervalo ---
-symbols = ['BTC/USD', 'ETH/USD', 'AAPL', 'TSLA', 'EUR/USD']
+symbols = ['USD/JPY', 'BTC/USD', 'ETH/USD', 'AAPL', 'TSLA', 'EUR/USD']
 intervals = ['1min', '5min', '15min', '30min', '1h']
 
 col1, col2 = st.columns(2)
