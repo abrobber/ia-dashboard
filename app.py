@@ -31,19 +31,37 @@ def get_candles(symbol, interval, outputsize=100):
         "outputsize": outputsize,
         "apikey": API_KEY
     }
-    r = requests.get(url, params=params)
-    data = r.json()
-    if "values" not in data:
-        st.warning(data.get("message", "Error al obtener datos"))
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        # Validación de error de respuesta
+        if "status" in data and data["status"] == "error":
+            st.error(f"🚫 API Error: {data.get('message', 'Desconocido')}")
+            return pd.DataFrame()
+
+        if "values" not in data:
+            st.warning("⚠️ No se recibieron datos. Verifica el símbolo, intervalo o tu API Key.")
+            return pd.DataFrame()
+
+        df = pd.DataFrame(data["values"])
+        df['datetime'] = pd.to_datetime(df['datetime'])
+        df = df.sort_values("datetime")
+
+        # Validación antes de conversión
+        campos = ["open", "high", "low", "close", "volume"]
+        for campo in campos:
+            if campo not in df.columns:
+                st.error(f"❌ Faltan datos: campo '{campo}' no encontrado en la respuesta.")
+                return pd.DataFrame()
+
+        df[campos] = df[campos].astype(float)
+        return df
+
+    except Exception as e:
+        st.exception(f"🧨 Error inesperado: {e}")
         return pd.DataFrame()
-    df = pd.DataFrame(data["values"])
-    df['datetime'] = pd.to_datetime(df['datetime'])
-    df = df.sort_values("datetime")
-    df = df.astype({
-        "open": float, "high": float, "low": float,
-        "close": float, "volume": float
-    })
-    return df
+
 
 # --- Análisis técnico y señales ---
 def analizar(df):
