@@ -74,6 +74,10 @@ def analizar(df):
         (df['ROC'] > 0) &
         (df['vol_rel'] > 1.5)
     )
+    df['ColorEntrada'] = df.apply(
+        lambda row: 'verde' if row['close'] > row['open'] else 'roja',
+        axis=1
+    )
     return df
 
 # --- Visualización ---
@@ -111,3 +115,17 @@ if not df.empty:
         st.success("🚀 Entrada detectada: Momentum + Volumen confirmados.")
     else:
         st.info("Sin condiciones activas en esta vela.")
+
+entradas = df[df['Entrada']]
+for _, row in entradas.iterrows():
+    color = 'limegreen' if row['ColorEntrada'] == 'verde' else 'red'
+    fig.add_trace(go.Scatter(
+        x=[row['datetime']],
+        y=[row['high'] * 1.01],
+        mode='markers',
+        marker=dict(size=14, color=color, symbol='triangle-up'),
+        name='Señal Entrada',
+        text=f"{row['TipoEntrada']} ({row['ColorEntrada']})",
+        hoverinfo='text+x'
+    ))
+
