@@ -74,11 +74,27 @@ def analizar(df):
         (df['ROC'] > 0) &
         (df['vol_rel'] > 1.5)
     )
+
+    # Asegurar columnas para señales visuales
     df['ColorEntrada'] = df.apply(
         lambda row: 'verde' if row['close'] > row['open'] else 'roja',
         axis=1
     )
+
+    def clasificar_entrada(row):
+        if row['RSI'] > 65 and row['ROC'] > 1:
+            return "Momentum fuerte"
+        elif row['vol_rel'] > 2 and row['close'] > row['open']:
+            return "Breakout con volumen"
+        elif row['RSI'] < 60 and row['ROC'] > 0:
+            return "Anticipada"
+        else:
+            return "Otra"
+
+    df['TipoEntrada'] = df.apply(clasificar_entrada, axis=1)
+    df['Accion'] = df['ColorEntrada'].apply(lambda c: 'Comprar' if c == 'verde' else 'Vender')
     return df
+
 
 # --- Visualización ---
 df = get_candles(symbol, interval)
