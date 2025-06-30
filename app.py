@@ -5,6 +5,7 @@ import requests
 import ta
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
+from plotly.subplots import make_subplots
 
 # Refresca cada 60 segundos (60,000 ms)
 st_autorefresh(interval=60 * 1000, key="data_refresh")
@@ -107,17 +108,49 @@ if not df.empty:
     ultima = df.iloc[-1]
 
     st.subheader(f"{symbol} — Última vela: {ultima['datetime'].strftime('%Y-%m-%d %H:%M')}")
-
-    fig = go.Figure(data=[
+    
+    fig = make_subplots(
+        rows=2, cols=1, shared_xaxes=True,
+        row_heights=[0.7, 0.3], vertical_spacing=0.05,
+        subplot_titles=("Precio", "Volumen")
+    )
+    
+    # Velas
+    fig.add_trace(
         go.Candlestick(
             x=df['datetime'],
             open=df['open'], high=df['high'],
             low=df['low'], close=df['close'],
-            name='Precio'),
+            name='Precio'
+        ),
+        row=1, col=1
+    )
+    
+    # Volumen
+    fig.add_trace(
         go.Bar(
             x=df['datetime'], y=df['volume'],
-            name='Volumen', marker_color='lightblue', yaxis='y2')
-    ])
+            name='Volumen', marker_color='lightblue'
+        ),
+        row=2, col=1
+    )
+    
+    # Entradas (mantén este bloque donde agregas los marcadores)
+    entradas = df[df['Entrada']]
+    for _, row in entradas.iterrows():
+        color = 'limegreen' if row['ColorEntrada'] == 'verde' else 'red'
+        fig.add_trace(go.Scatter(
+            x=[row['datetime']],
+            y=[row['high'] * 1.01],
+            mode='markers',
+            marker=dict(size=14, color=color, symbol='triangle-up'),
+            name=f"Entrada: {row['Accion']}",
+            text=f"{row['TipoEntrada']} ({row['Accion']})",
+            hoverinfo='text'
+        ), row=1, col=1)
+    
+    fig.update_layout(height=700, xaxis_rangeslider_visible=False)
+
 
     # Agregar señales solo si hay entradas válidas
     entradas = df[df['Entrada']]
@@ -147,7 +180,8 @@ if not df.empty:
     col3.metric("Vol Relativo", f"{ultima['vol_rel']:.2f}x")
 
     if ultima['Entrada']:
-        st.success("🚀 Entrada detectada: Momentum + Volumen confirmados.")
+        hora = ultima['datetime'].strftime('%Y-%m-%d %H:%M')
+        st.success(f"🚀 Entrada {ultima['Accion']} detectada a las {hora}.")
     else:
         st.info("Sin condiciones activas en esta vela.")
 
