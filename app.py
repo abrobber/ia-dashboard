@@ -118,6 +118,21 @@ if not df.empty:
             x=df['datetime'], y=df['volume'],
             name='Volumen', marker_color='lightblue', yaxis='y2')
     ])
+
+    # Agregar señales solo si hay entradas válidas
+    entradas = df[df['Entrada']]
+    for _, row in entradas.iterrows():
+        color = 'limegreen' if row['ColorEntrada'] == 'verde' else 'red'
+        fig.add_trace(go.Scatter(
+            x=[row['datetime']],
+            y=[row['high'] * 1.01],
+            mode='markers',
+            marker=dict(size=14, color=color, symbol='triangle-up'),
+            name=f"Entrada: {row['Accion']}",
+            text=f"{row['TipoEntrada']} ({row['Accion']})",
+            hoverinfo='text'
+        ))
+
     fig.update_layout(
         xaxis_rangeslider_visible=False,
         yaxis=dict(title='Precio'),
@@ -136,16 +151,4 @@ if not df.empty:
     else:
         st.info("Sin condiciones activas en esta vela.")
 
-entradas = df[df['Entrada']]
-for _, row in entradas.iterrows():
-    color = 'limegreen' if row['ColorEntrada'] == 'verde' else 'red'
-    fig.add_trace(go.Scatter(
-        x=[row['datetime']],
-        y=[row['high'] * 1.01],
-        mode='markers',
-        marker=dict(size=14, color=color, symbol='triangle-up'),
-        name='Señal Entrada',
-        text=f"{row['TipoEntrada']} ({row['ColorEntrada']})",
-        hoverinfo='text+x'
-    ))
 
