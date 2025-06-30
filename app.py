@@ -4,6 +4,10 @@ import plotly.graph_objects as go
 import requests
 import ta
 from datetime import datetime
+from streamlit_autorefresh import st_autorefresh
+
+# Refresca cada 60 segundos (60,000 ms)
+st_autorefresh(interval=60 * 1000, key="data_refresh")
 
 # --- Configuración de la App ---
 st.set_page_config(layout="wide", page_title="📊 Bitácora Twelve Data")
