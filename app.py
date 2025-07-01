@@ -118,6 +118,20 @@ def calcular_perfil_volumen(df, precision=0.5):
 
     return poc, val, vah, vol_por_nivel
 
+def perfil_volumen(df, precision=0.5):
+    df['nivel'] = (df['close'] / precision).round(0) * precision
+    volumen_por_precio = df.groupby('nivel')['volume'].sum()
+    volumen_por_precio = volumen_por_precio.sort_index(ascending=True)
+
+    total = volumen_por_precio.sum()
+    sorted_vols = volumen_por_precio.sort_values(ascending=False)
+    poc = sorted_vols.idxmax()
+    vol_acum = sorted_vols.cumsum()
+    niveles_70 = vol_acum[vol_acum <= total * 0.7].index
+    val, vah = min(niveles_70), max(niveles_70)
+
+    return volumen_por_precio, poc, val, vah
+
 
 # --- Visualización ---
 df = get_candles(symbol, interval)
@@ -198,5 +212,31 @@ if not df.empty:
     else:
         st.info("Sin condiciones activas en esta vela.")
 
+
+    # Calcular perfil
+    vol_profile, poc, val, vah = perfil_volumen(df)
+    
+    # Añadir líneas horizontales en gráfico de velas
+    fig.add_hline(y=poc, line_dash="dash", line_color="orange", annotation_text="POC", row=1, col=1)
+    fig.add_hline(y=val, line_dash="dot", line_color="gray", annotation_text="VAL", row=1, col=1)
+    fig.add_hline(y=vah, line_dash="dot", line_color="gray", annotation_text="VAH", row=1, col=1)
+    
+    # Añadir gráfico lateral de volumen horizontal (estilo VA-MOD)
+    from plotly import graph_objects as go
+    
+    # Solo para el rango visible
+    max_vol = vol_profile.max()
+    for nivel, vol in vol_profile.items():
+        fig.add_shape(
+            type="rect",
+            x0=df['datetime'].min(),
+            x1=df['datetime'].min() + pd.Timedelta(minutes=1),  # invisible ancho
+            y0=nivel - precision / 2,
+            y1=nivel + precision / 2,
+            xref="x", yref="y",
+            line=dict(width=0),
+            fillcolor="rgba(150, 150, 255, {:.2f})".format(vol / max_vol),
+            layer="below"
+        )
 
 
