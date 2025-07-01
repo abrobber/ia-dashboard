@@ -214,6 +214,7 @@ if not df.empty:
 
 
     # Calcular perfil
+    precision = 0.5  # Ajustable según resolución de precios
     vol_profile, poc, val, vah = perfil_volumen(df)
     
     # Añadir líneas horizontales en gráfico de velas
