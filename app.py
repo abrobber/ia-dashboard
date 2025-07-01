@@ -100,6 +100,24 @@ def analizar(df):
     df['Accion'] = df['ColorEntrada'].apply(lambda c: 'Comprar' if c == 'verde' else 'Vender')
     return df
 
+def calcular_perfil_volumen(df, precision=0.5):
+    # Redondeamos precios al múltiplo de "precision"
+    df['nivel'] = (df['close'] / precision).round(0) * precision
+    vol_por_nivel = df.groupby('nivel')['volume'].sum().sort_values(ascending=False)
+    
+    # POC
+    poc = vol_por_nivel.idxmax()
+    
+    # Área de valor (70%)
+    total_vol = vol_por_nivel.sum()
+    vol_acum = vol_por_nivel.cumsum()
+    niveles_area_valor = vol_acum[vol_acum <= total_vol * 0.7].index
+
+    val = min(niveles_area_valor)
+    vah = max(niveles_area_valor)
+
+    return poc, val, vah, vol_por_nivel
+
 
 # --- Visualización ---
 df = get_candles(symbol, interval)
@@ -135,6 +153,13 @@ if not df.empty:
         ),
         row=2, col=1
     )
+
+    poc, val, vah, _ = calcular_perfil_volumen(df)
+    # Añadir líneas horizontales
+    fig.add_hline(y=poc, line_dash="dash", line_color="orange", annotation_text="POC", row=1, col=1)
+    fig.add_hline(y=val, line_dash="dot", line_color="gray", annotation_text="VAL", row=1, col=1)
+    fig.add_hline(y=vah, line_dash="dot", line_color="gray", annotation_text="VAH", row=1, col=1)
+
 
     # Marcar entradas si existen
     entradas = df[df['Entrada']]
