@@ -190,15 +190,45 @@ if not df.empty:
                 hoverinfo='text'
             ), row=1, col=1)
 
-    # Layout final
+    # Layout final y trazado del gráfico principal
     fig.update_layout(
         height=700,
         showlegend=False,
-        xaxis_rangeslider_visible=False
+        xaxis_rangeslider_visible=False,
+        margin=dict(t=40, l=20, r=20, b=20)
     )
+    
+    # Calcular perfil lateral
+    precision = 0.5  # Puedes hacerlo slider después
+    vol_profile, poc, val, vah = perfil_volumen(df, precision=precision)
+    
+    vp_df = vol_profile.reset_index()
+    vp_df.columns = ['nivel', 'volume']
+    vp_df = vp_df.sort_values('nivel', ascending=True)
+    
+    # Crear gráfico lateral estilo VA-MOD
+    vol_fig = go.Figure()
+    vol_fig.add_trace(go.Bar(
+        x=vp_df['volume'],
+        y=vp_df['nivel'],
+        orientation='h',
+        marker=dict(color=vp_df['volume'], colorscale='Blues'),
+        showlegend=False
+    ))
+    vol_fig.update_layout(
+        height=700,
+        title="📐 Perfil de Volumen",
+        yaxis=dict(autorange="reversed", title="Precio"),
+        xaxis_title="Volumen",
+        margin=dict(t=40, l=60, r=10, b=40),
+        template="plotly_white"
+    )
+    
+    # Mostrar ambos gráficos en columnas paralelas
+    left_col, right_col = st.columns([3, 1])
+    left_col.plotly_chart(fig, use_container_width=True)
+    right_col.plotly_chart(vol_fig, use_container_width=True)
 
-    #st.plotly_chart(fig, use_container_width=True)
-    st.plotly_chart(vol_fig, use_container_width=True)
 
     # Métricas
     col1, col2, col3 = st.columns(3)
