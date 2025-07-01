@@ -197,7 +197,8 @@ if not df.empty:
         xaxis_rangeslider_visible=False
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    #st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(vol_fig, use_container_width=True)
 
     # Métricas
     col1, col2, col3 = st.columns(3)
@@ -216,6 +217,33 @@ if not df.empty:
     # Calcular perfil
     precision = 0.5  # Ajustable según resolución de precios
     vol_profile, poc, val, vah = perfil_volumen(df)
+
+    import plotly.express as px
+
+    # Convertir volumen por precio a DataFrame
+    vp_df = vol_profile.reset_index()
+    vp_df.columns = ['nivel', 'volume']
+    
+    # Crear gráfico lateral
+    vol_fig = go.Figure()
+    vol_fig.add_trace(go.Bar(
+        x=vp_df['volume'],
+        y=vp_df['nivel'],
+        orientation='h',
+        marker=dict(color=vp_df['volume'], colorscale='Blues'),
+        showlegend=False
+    ))
+    
+    vol_fig.update_layout(
+        height=700,
+        title="Perfil de Volumen por Precio",
+        yaxis_title="Precio",
+        xaxis_title="Volumen",
+        template="plotly_white",
+        margin=dict(t=40, l=80, r=20, b=40),
+        yaxis=dict(autorange="reversed")  # para que los precios altos estén arriba
+    )
+
     
     # Añadir líneas horizontales en gráfico de velas
     fig.add_hline(y=poc, line_dash="dash", line_color="orange", annotation_text="POC", row=1, col=1)
